@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Accessible Business Management App</title>
+  <style>
+    /* Basic reset and typography */
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f9fafb;
+      color: #222;
+      line-height: 1.6;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    a {
+      color: #0366d6;
+      text-decoration: none;
+    }
+    a:focus,
+    button:focus,
+    input:focus,
+    select:focus,
+    textarea:focus {
+      outline: 3px solid #0366d6;
+      outline-offset: 2px;
+    }
+    header, footer {
+      background-color: #24292e;
+      color: white;
+      padding: 1rem 2rem;
+      flex-shrink: 0;
+    }
+    header h1 {
+      margin: 0;
+      font-weight: 600;
+      font-size: 1.75rem;
+    }
+    main {
+      display: flex;
+      flex: 1 1 auto;
+      overflow: hidden;
+    }
+    nav#sidebar {
+      background-color: #2f363d;
+      color: white;
+      width: 280px;
+      min-width: 280px;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+    nav#sidebar h2 {
+      font-size: 1.2rem;
+      margin-top: 0;
+      margin-bottom: 1rem;
+      font-weight: 600;
+    }
+    nav#sidebar ul {
+      list-style: none;
+      padding-left: 0;
+      margin: 0;
+    }
+    nav#sidebar ul li {
+      margin-bottom: 0.5rem;
+    }
+    nav#sidebar ul li a {
+      display: block;
+      padding: 0.5rem 0.75rem;
+      border-radius: 4px;
+      transition: background-color 0.2s;
+    }
+    nav#sidebar ul li a[aria-current="page"],
+    nav#sidebar ul li a:hover,
+    nav#sidebar ul li a:focus {
+      background-color: #0366d6;
+      color: white;
+    }
+    section.content-area {
+      flex: 1 1 auto;
+      padding: 2rem;
+      overflow-y: auto;
+      background-color: white;
+      border-left: 1px solid #ddd;
+    }
+    section.content-area h2 {
+      margin-top: 0;
+      font-weight: 600;
+      border-bottom: 2px solid #0366d6;
+      padding-bottom: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    .form-group {
+      margin-bottom: 1.25rem;
+    }
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+    input[type="text"],
+    input[type="email"],
+    input[type="number"],
+    select,
+    textarea {
+      width: 100%;
+      padding: 0.5rem;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-family: inherit;
+    }
+    button {
+      background-color: #0366d6;
+      border: none;
+      color: white;
+      padding: 0.6rem 1.2rem;
+      font-size: 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    button:hover,
+    button:focus {
+      background-color: #024d9c;
+      outline: none;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 1rem;
+    }
+    table thead {
+      background-color: #0366d6;
+      color: white;
+    }
+    table th,
+    table td {
+      padding: 0.75rem 1rem;
+      border: 1px solid #ddd;
+      text-align: left;
+      vertical-align: middle;
+    }
+    table tr:nth-child(even) {
+      background-color: #f2f6fc;
+    }
+    /* Scrollbar styling for sidebar and content */
+    nav#sidebar::-webkit-scrollbar,
+    section.content-area::-webkit-scrollbar {
+      width: 8px;
+    }
+    nav#sidebar::-webkit-scrollbar-thumb,
+    section.content-area::-webkit-scrollbar-thumb {
+      background-color: #999;
+      border-radius: 4px;
+    }
+    nav#sidebar::-webkit-scrollbar-track,
+    section.content-area::-webkit-scrollbar-track {
+      background-color: #222;
+    }
+    /* Modal Styles */
+    .modal {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: rgba(0,0,0,0.6);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+    .modal[aria-hidden="false"] {
+      display: flex;
+    }
+    .modal-content {
+      background-color: white;
+      padding: 1.5rem;
+      max-width: 600px;
+      width: 90%;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.25);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    .modal-header h3 {
+      margin: 0;
+    }
+    .modal-close-btn {
+      background: transparent;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #333;
+    }
+    .modal-close-btn:focus {
+      outline: 3px solid #0366d6;
+      outline-offset: 2px;
+    }
+    /* Accessibility helper: skip link */
+    .skip-link {
+      position: absolute;
+      top: -40px;
+      left: 0;
+      background: #0366d6;
+      color: white;
+      padding: 8px;
+      z-index: 10000;
+      text-decoration: none;
+      font-weight: 700;
+    }
+    .skip-link:focus {
+      top: 0;
+    }
+    /* Dark mode toggle */
+    .dark-mode {
+      background-color: #121212;
+      color: #ddd;
+    }
+    .dark-mode header,
+    .dark-mode footer {
+      background-color: #000;
+    }
+    .dark-mode nav#sidebar {
+      background-color: #1e1e1e;
+      color: #ccc;
+    }
+    .dark-mode nav#sidebar ul li a {
+      color: #ccc;
+    }
+    .dark-mode nav#sidebar ul li a[aria-current="page"],
+    .dark-mode nav#sidebar ul li a:hover,
+    .dark-mode nav#sidebar ul li a:focus {
+      background-color: #1a73e8;
+      color: white;
+    }
+    .dark-mode section.content-area {
+      background-color: #222;
+      border-left: 1px solid #555;
+    }
+    .dark-mode table thead {
+      background-color: #1a73e8;
+    }
+    .dark-mode table tr:nth-child(even) {
+      background-color: #2a2a2a;
+    }
+    .dark-mode button {
+      background-color: #1a73e8;
+    }
+    .dark-mode button:hover,
+    .dark-mode button:focus {
+      background-color: #125abd;
+    }
+    /* Responsive */
+    @media (max-width: 768px) {
+      nav#sidebar {
+        position: fixed;
+        left: -280px;
+        top: 0;
+        height: 100%;
+        z-index: 9998;
+        transition: left 0.3s ease-in-out;
+      }
+      nav#sidebar.open {
+        left: 0;
+      }
+      main {
+        flex-direction: column;
+      }
+      section.content-area {
+        padding: 1rem;
+      }
+      #sidebarToggle {
+        display: inline-block;
+        background: none;
+        border: none;
+        color: white;
+        font-size: 1.5rem;
+        cursor: pointer;
+      }
+      header h1 {
+        font-size: 1.25rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <header role="banner">
+    <button id="sidebarToggle" aria-controls="sidebar" aria-expanded="false" aria-label="Toggle navigation menu">☰</button>
+    <h1>Business Manager Pro</h1>
+  </header>
+
+  <main>
+    <nav id="sidebar" role="navigation" aria-label="Main menu">
+      <h2>Navigation</h2>
+      <ul>
+        <li><a href="#dashboard" aria-current="page">Dashboard</a></li>
+        <li><a href="#clients">Clients</a></li>
+        <li><a href="#projects">Projects</a></li>
+        <li><a href="#invoices">Invoices</a></li>
+        <li><a href="#reports">Reports</a></li>
+        <li><a href="#settings">Settings</a></li>
+      </ul>
+    </nav>
+
+    <section class="content-area" id="main-content" tabindex="-1">
+      <article id="dashboard" aria-label="Dashboard Overview" tabindex="0">
+        <h2>Dashboard Overview</h2>
+        <section aria-label="Business summary metrics">
+          <dl>
+            <dt>Total Clients</dt>
+            <dd><strong>134</strong></dd>
+            <dt>Active Projects</dt>
+            <dd><strong>22</strong></dd>
+            <dt>Pending Invoices</dt>
+            <dd><strong>8</strong></dd>
+            <dt>Monthly Revenue</dt>
+            <dd><strong>$45,320</strong></dd>
+          </dl>
+        </section>
+        <section aria-label="Recent activities" style="margin-top: 2rem;">
+          <h3>Recent Activities</h3>
+          <ul>
+            <li>New client "Acme Corp" added</li>
+            <li>Invoice #1024 sent to "Beta LLC"</li>
+            <li>Project "Website Redesign" marked as complete</li>
+            <li>Monthly report generated</li>
+          </ul>
+        </section>
+      </article>
+
+      <article id="clients" aria-label="Clients List" tabindex="0" hidden>
+        <h2>Clients</h2>
+        <button id="addClientBtn">Add New Client</button>
+        <table aria-describedby="clients-desc" role="grid">
+          <caption id="clients-desc">List of all clients with contact information and status</caption>
+          <thead>
+            <tr>
+              <th scope="col">Client Name</th>
+              <th scope="col">Email</th>
+              <th scope="col">Phone</th>
+              <th scope="col">Status</th>
+              <th scope="col">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="clientsTableBody">
+            <!-- Client rows populated dynamically -->
+          </tbody>
+        </table>
+      </article>
+
+      <article id="projects" aria-label="Projects List" tabindex="0" hidden>
+        <h2>Projects</h2>
+        <button id="addProjectBtn">Add New Project</button>
+        <table aria-describedby="projects-desc" role="grid">
+          <caption id="projects-desc">List of all projects with clients and status</caption>
+          <thead>
+            <tr>
+              <th scope="col">Project Name</th>
+              <th scope="col">Client</th>
+              <th scope="col">Deadline</th>
+              <th scope="col">Status</th>
+              <th scope="col">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="projectsTableBody">
+            <!-- Project rows populated dynamically -->
+          </tbody>
+        </table>
+      </article>
+
+      <article id="invoices" aria-label="Invoices List" tabindex="0" hidden>
+        <h2>Invoices</h2>
+        <button id="addInvoiceBtn">Create Invoice</button>
+        <table aria-describedby="invoices-desc" role="grid">
+          <caption id="invoices-desc">Invoices with client and payment status</caption>
+          <thead>
+            <tr>
+              <th scope="col">Invoice #</th>
+              <th scope="col">Client</th>
+              <th scope="col">Amount</th>
+              <th scope="col">Due Date</th>
+              <th scope="col">Status</th>
+              <th scope="col">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="invoicesTableBody">
+            <!-- Invoice rows populated dynamically -->
+          </tbody>
+        </table>
+      </article>
+
+      <article id="reports" aria-label="Reports Section" tabindex="0" hidden>
+        <h2>Reports</h2>
+        <section aria-label="Financial Reports">
+          <h3>Financial Reports</h3>
+          <p>Generate monthly or yearly financial reports.</p>
+          <button id="generateReportBtn">Generate Report</button>
+        </section>
+      </article>
+
+      <article id="settings" aria-label="Settings" tabindex="0" hidden>
+        <h2>Settings</h2>
+        <form id="settingsForm">
+          <div class="form-group">
+            <label for="currencySelect">Currency</label>
+            <select id="currencySelect" name="currency" aria-describedby="currencyHelp">
+              <option value="USD" selected>USD - US Dollar</option>
+              <option value="EUR">EUR - Euro</option>
+              <option value="GBP">GBP - British Pound</option>
+              <option value="AFN">AFN - Afghan Afghani</option>
+            </select>
+            <small id="currencyHelp">Select your preferred currency for reports and invoices.</small>
+          </div>
+          <div class="form-group">
+            <label for="darkModeToggle">Dark Mode</label>
+            <input type="checkbox" id="darkModeToggle" name="darkMode" aria-checked="false" />
+          </div>
+          <button type="submit">Save Settings</button>
+        </form>
+      </article>
+    </section>
+  </main>
+
+  <footer role="contentinfo">
+    <p>© 2025 Business Manager Pro. All rights reserved.</p>
+  </footer>
+
+  <!-- Modal Template -->
+  <div id="modal" class="modal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="modalTitle" tabindex="-1">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modalTitle">Modal Title</h3>
+        <button class="modal-close-btn" aria-label="Close modal">&times;</button>
+      </div>
+      <div id="modalBody">
+        <!-- Content inserted dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Accessibility and Navigation Script
+    (function() {
+      const sidebar = document.getElementById('sidebar');
+      const sidebarToggle = document.getElementById('sidebarToggle');
+      const mainContent = document.getElementById('main-content');
+      const navLinks = sidebar.querySelectorAll('a');
+      const sections = document.querySelectorAll('article[aria-label]');
+      let currentSection = document.querySelector('nav#sidebar ul li a[aria-current="page"]').getAttribute('href').substring(1);
+
+      // Toggle sidebar for mobile
+      sidebarToggle.addEventListener('click', () => {
+        const expanded = sidebarToggle.getAttribute('aria-expanded') === 'true' || false;
+        sidebarToggle.setAttribute('aria-expanded', !expanded);
+        sidebar.classList.toggle('open');
+      });
+
+      // Navigation links click
+      navLinks.forEach(link => {
+        link.addEventListener('click', e => {
+          e.preventDefault();
+          const targetId = link.getAttribute('href').substring(1);
+
+          // Hide all sections
+          sections.forEach(section => section.hidden = true);
+          // Show target section
+          const targetSection = document.getElementById(targetId);
+          if(targetSection) {
+            targetSection.hidden = false;
+            targetSection.focus();
+          }
+          // Update aria-current
+          navLinks.forEach(l => l.removeAttribute('aria-current'));
+          link.setAttribute('aria-current', 'page');
+
+          // Close sidebar on mobile if open
+          if(window.innerWidth <= 768 && sidebar.classList.contains('open')) {
+            sidebar.classList.remove('open');
+            sidebarToggle.setAttribute('aria-expanded', 'false');
+            sidebarToggle.focus();
+          }
+        });
+      });
+
+      // Clients Data Example
+      const clients = [
+        { id: 1, name: 'Acme Corporation', email: 'contact@acme.com', phone: '123-456-7890', status: 'Active' },
+        { id: 2, name: 'Beta LLC', email: 'info@beta.com', phone: '234-567-8901', status: 'Inactive' },
+        { id: 3, name: 'Gamma Inc', email: 'sales@gamma.com', phone: '345-678-9012', status: 'Active' }
+      ];
+
+      const clientsTableBody = document.getElementById('clientsTableBody');
+      const addClientBtn = document.getElementById('addClientBtn');
+
+      // Populate clients table
+      function renderClients() {
+        clientsTableBody.innerHTML = '';
+        clients.forEach(client => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${client.name}</td>
+            <td><a href="mailto:${client.email}">${client.email}</a></td>
+            <td><a href="tel:${client.phone}">${client.phone}</a></td>
+            <td>${client.status}</td>
+            <td>
+              <button class="edit-client-btn" data-id="${client.id}">Edit</button>
+              <button class="delete-client-btn" data-id="${client.id}">Delete</button>
+            </td>
+          `;
+          clientsTableBody.appendChild(tr);
+        });
+      }
+
+      renderClients();
+
+      // Modal Elements
+      const modal = document.getElementById('modal');
+      const modalTitle = document.getElementById('modalTitle');
+      const modalBody = document.getElementById('modalBody');
+      const modalCloseBtn = modal.querySelector('.modal-close-btn');
+
+      // Trap focus inside modal for accessibility
+      function trapFocus(element) {
+        const focusableElements = element.querySelectorAll('a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])');
+        const firstFocusable = focusableElements[0];
+        const lastFocusable = focusableElements[focusableElements.length -1];
+
+        function handleTab(e) {
+          if (e.key === 'Tab' || e.keyCode === 9) {
+            if (e.shiftKey) { // Shift + Tab
+              if (document.activeElement === firstFocusable) {
+                e.preventDefault();
+                lastFocusable.focus();
+              }
+            } else { // Tab
+              if (document.activeElement === lastFocusable) {
+                e.preventDefault();
+                firstFocusable.focus();
+              }
+            }
+          } else if (e.key === 'Escape' || e.key === 'Esc' || e.keyCode === 27) {
+            closeModal();
+          }
+        }
+        element.addEventListener('keydown', handleTab);
+        return () => element.removeEventListener('keydown', handleTab);
+      }
+
+      let removeTrapFocusListener = null;
+
+      // Open Modal
+      function openModal(title, contentHTML) {
+        modalTitle.textContent = title;
+        modalBody.innerHTML = contentHTML;
+        modal.setAttribute('aria-hidden', 'false');
+        modal.style.display = 'flex';
+        // Save previously focused element
+        modal._previousActiveElement = document.activeElement;
+        // Focus first focusable inside modal
+        const firstFocusable = modalBody.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+        if(firstFocusable) {
+          firstFocusable.focus();
+        } else {
+          modalCloseBtn.focus();
+        }
+        // Trap focus
+        removeTrapFocusListener = trapFocus(modal);
+      }
+
+      // Close Modal
+      function closeModal() {
+        modal.setAttribute('aria-hidden', 'true');
+        modal.style.display = 'none';
+        modalTitle.textContent = '';
+        modalBody.innerHTML = '';
+        if (removeTrapFocusListener) removeTrapFocusListener();
+        // Restore focus to previously focused element
+        if (modal._previousActiveElement) modal._previousActiveElement.focus();
+      }
+
+      modalCloseBtn.addEventListener('click', closeModal);
+      modal.addEventListener('click', (e) => {
+        if(e.target === modal) closeModal();
+      });
+
+      // Add Client Button Click
+      addClientBtn.addEventListener('click', () => {
+        openModal('Add New Client', `
+          <form id="clientForm">
+            <div class="form-group">
+              <label for="clientName">Client Name</label>
+              <input type="text" id="clientName" name="clientName" required />
+            </div>
+            <div class="form-group">
+              <label for="clientEmail">Email</label>
+              <input type="email" id="clientEmail" name="clientEmail" required />
+            </div>
+            <div class="form-group">
+              <label for="clientPhone">Phone</label>
+              <input type="text" id="clientPhone" name="clientPhone" />
+            </div>
+            <div class="form-group">
+              <label for="clientStatus">Status</label>
+              <select id="clientStatus" name="clientStatus" required>
+                <option value="Active" selected>Active</option>
+                <option value="Inactive">Inactive</option>
+              </select>
+            </div>
+            <button type="submit">Save Client</button>
+          </form>
+        `);
+        const clientForm = document.getElementById('clientForm');
+        clientForm.addEventListener('submit', e => {
+          e.preventDefault();
+          const newClient = {
+            id: clients.length ? clients[clients.length-1].id + 1 : 1,
+            name: clientForm.clientName.value.trim(),
+            email: clientForm.clientEmail.value.trim(),
+            phone: clientForm.clientPhone.value.trim(),
+            status: clientForm.clientStatus.value
+          };
+          clients.push(newClient);
+          renderClients();
+          closeModal();
+        });
+      });
+
+      // Delegate edit and delete buttons on clients table
+      clientsTableBody.addEventListener('click', (e) => {
+        if(e.target.classList.contains('edit-client-btn')) {
+          const clientId = parseInt(e.target.getAttribute('data-id'));
+          const client = clients.find(c => c.id === clientId);
+          if(client) {
+            openModal('Edit Client', `
+              <form id="clientEditForm">
+                <div class="form-group">
+                  <label for="editClientName">Client Name</label>
+                  <input type="text" id="editClientName" name="editClientName" value="${client.name}" required />
+                </div>
+                <div class="form-group">
+                  <label for="editClientEmail">Email</label>
+                  <input type="email" id="editClientEmail" name="editClientEmail" value="${client.email}" required />
+                </div>
+                <div class="form-group">
+                  <label for="editClientPhone">Phone</label>
+                  <input type="text" id="editClientPhone" name="editClientPhone" value="${client.phone}" />
+                </div>
+                <div class="form-group">
+                  <label for="editClientStatus">Status</label>
+                  <select id="editClientStatus" name="editClientStatus" required>
+                    <option value="Active" ${client.status === 'Active' ? 'selected' : ''}>Active</option>
+                    <option value="Inactive" ${client.status === 'Inactive' ? 'selected' : ''}>Inactive</option>
+                  </select>
+                </div>
+                <button type="submit">Update Client</button>
+              </form>
+            `);
+            const clientEditForm = document.getElementById('clientEditForm');
+            clientEditForm.addEventListener('submit', evt => {
+              evt.preventDefault();
+              client.name = clientEditForm.editClientName.value.trim();
+              client.email = clientEditForm.editClientEmail.value.trim();
+              client.phone = clientEditForm.editClientPhone.value.trim();
+              client.status = clientEditForm.editClientStatus.value;
+              renderClients();
+              closeModal();
+            });
+          }
+        } else if(e.target.classList.contains('delete-client-btn')) {
+          const clientId = parseInt(e.target.getAttribute('data-id'));
+          const clientIndex = clients.findIndex(c => c.id === clientId);
+          if(clientIndex !== -1) {
+            if(confirm(`Are you sure you want to delete client "${clients[clientIndex].name}"?`)) {
+              clients.splice(clientIndex, 1);
+              renderClients();
+            }
+          }
+        }
+      });
+
+      // Projects Data Example
+      const projects = [
+        { id: 1, name: 'Website Redesign', clientId: 1, deadline: '2025-07-01', status: 'Completed' },
+        { id: 2, name: 'Mobile App Development', clientId: 3, deadline: '2025-08-15', status: 'In Progress' }
+      ];
+
+      const projectsTableBody = document.getElementById('projectsTableBody');
+      const addProjectBtn = document.getElementById('addProjectBtn');
+
+      function getClientNameById(id) {
+        const client = clients.find(c => c.id === id);
+        return client ? client.name : 'Unknown Client';
+      }
+
+      // Populate projects table
+      function renderProjects() {
+        projectsTableBody.innerHTML = '';
+        projects.forEach(project => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${project.name}</td>
+            <td>${getClientNameById(project.clientId)}</td>
+            <td>${project.deadline}</td>
+            <td>${project.status}</td>
+            <td>
+              <button class="edit-project-btn" data-id="${project.id}">Edit</button>
+              <button class="delete-project-btn" data-id="${project.id}">Delete</button>
+            </td>
+          `;
+          projectsTableBody.appendChild(tr);
+        });
+      }
+
+      renderProjects();
+
+      // Add Project Button Click
+      addProjectBtn.addEventListener('click', () => {
+        let clientOptions = clients.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+        openModal('Add New Project', `
+          <form id="projectForm">
+            <div class="form-group">
+              <label for="projectName">Project Name</label>
+              <input type="text" id="projectName" name="projectName" required />
+            </div>
+            <div class="form-group">
+              <label for="projectClient">Client</label>
+              <select id="projectClient" name="projectClient" required>
+                ${clientOptions}
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="projectDeadline">Deadline</label>
+              <input type="date" id="projectDeadline" name="projectDeadline" required />
+            </div>
+            <div class="form-group">
+              <label for="projectStatus">Status</label>
+              <select id="projectStatus" name="projectStatus" required>
+                <option value="Not Started" selected>Not Started</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Completed">Completed</option>
+              </select>
+            </div>
+            <button type="submit">Save Project</button>
+          </form>
+        `);
+        const projectForm = document.getElementById('projectForm');
+        projectForm.addEventListener('submit', e => {
+          e.preventDefault();
+          const newProject = {
+            id: projects.length ? projects[projects.length-1].id + 1 : 1,
+            name: projectForm.projectName.value.trim(),
+            clientId: parseInt(projectForm.projectClient.value),
+            deadline: projectForm.projectDeadline.value,
+            status: projectForm.projectStatus.value
+          };
+          projects.push(newProject);
+          renderProjects();
+          closeModal();
+        });
+      });
+
+      // Delegate edit and delete buttons on projects table
+      projectsTableBody.addEventListener('click', e => {
+        if(e.target.classList.contains('edit-project-btn')) {
+          const projectId = parseInt(e.target.getAttribute('data-id'));
+          const project = projects.find(p => p.id === projectId);
+          if(project) {
+            let clientOptions = clients.map(c => `<option value="${c.id}" ${c.id === project.clientId ? 'selected' : ''}>${c.name}</option>`).join('');
+            openModal('Edit Project', `
+              <form id="projectEditForm">
+                <div class="form-group">
+                  <label for="editProjectName">Project Name</label>
+                  <input type="text" id="editProjectName" name="editProjectName" value="${project.name}" required />
+                </div>
+                <div class="form-group">
+                  <label for="editProjectClient">Client</label>
+                  <select id="editProjectClient" name="editProjectClient" required>
+                    ${clientOptions}
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="editProjectDeadline">Deadline</label>
+                  <input type="date" id="editProjectDeadline" name="editProjectDeadline" value="${project.deadline}" required />
+                </div>
+                <div class="form-group">
+                  <label for="editProjectStatus">Status</label>
+                  <select id="editProjectStatus" name="editProjectStatus" required>
+                    <option value="Not Started" ${project.status === 'Not Started' ? 'selected' : ''}>Not Started</option>
+                    <option value="In Progress" ${project.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
+                    <option value="Completed" ${project.status === 'Completed' ? 'selected' : ''}>Completed</option>
+                  </select>
+                </div>
+                <button type="submit">Update Project</button>
+              </form>
+            `);
+            const projectEditForm = document.getElementById('projectEditForm');
+            projectEditForm.addEventListener('submit', evt => {
+              evt.preventDefault();
+              project.name = projectEditForm.editProjectName.value.trim();
+              project.clientId = parseInt(projectEditForm.editProjectClient.value);
+              project.deadline = projectEditForm.editProjectDeadline.value;
+              project.status = projectEditForm.editProjectStatus.value;
+              renderProjects();
+              closeModal();
+            });
+          }
+        } else if(e.target.classList.contains('delete-project-btn')) {
+          const projectId = parseInt(e.target.getAttribute('data-id'));
+          const projectIndex = projects.findIndex(p => p.id === projectId);
+          if(projectIndex !== -1) {
+            if(confirm(`Are you sure you want to delete project "${projects[projectIndex].name}"?`)) {
+              projects.splice(projectIndex, 1);
+              renderProjects();
+            }
+          }
+        }
+      });
+
+      // Invoices Data Example
+      const invoices = [
+        { id: 1024, clientId: 2, amount: 1250.00, dueDate: '2025-06-15', status: 'Pending' },
+        { id: 1025, clientId: 1, amount: 5400.00, dueDate: '2025-07-01', status: 'Paid' }
+      ];
+
+      const invoicesTableBody = document.getElementById('invoicesTableBody');
+      const addInvoiceBtn = document.getElementById('addInvoiceBtn');
+
+      // Populate invoices table
+      function renderInvoices() {
+        invoicesTableBody.innerHTML = '';
+        invoices.forEach(invoice => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${invoice.id}</td>
+            <td>${getClientNameById(invoice.clientId)}</td>
+            <td>$${invoice.amount.toFixed(2)}</td>
+            <td>${invoice.dueDate}</td>
+            <td>${invoice.status}</td>
+            <td>
+              <button class="edit-invoice-btn" data-id="${invoice.id}">Edit</button>
+              <button class="delete-invoice-btn" data-id="${invoice.id}">Delete</button>
+            </td>
+          `;
+          invoicesTableBody.appendChild(tr);
+        });
+      }
+
+      renderInvoices();
+
+      // Add Invoice Button Click
+      addInvoiceBtn.addEventListener('click', () => {
+        let clientOptions = clients.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+        openModal('Add New Invoice', `
+          <form id="invoiceForm">
+            <div class="form-group">
+              <label for="invoiceClient">Client</label>
+              <select id="invoiceClient" name="invoiceClient" required>
+                ${clientOptions}
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="invoiceAmount">Amount ($)</label>
+              <input type="number" step="0.01" min="0" id="invoiceAmount" name="invoiceAmount" required />
+            </div>
+            <div class="form-group">
+              <label for="invoiceDueDate">Due Date</label>
+              <input type="date" id="invoiceDueDate" name="invoiceDueDate" required />
+            </div>
+            <div class="form-group">
+              <label for="invoiceStatus">Status</label>
+              <select id="invoiceStatus" name="invoiceStatus" required>
+                <option value="Pending" selected>Pending</option>
+                <option value="Paid">Paid</option>
+                <option value="Overdue">Overdue</option>
+              </select>
+            </div>
+            <button type="submit">Save Invoice</button>
+          </form>
+        `);
+        const invoiceForm = document.getElementById('invoiceForm');
+        invoiceForm.addEventListener('submit', e => {
+          e.preventDefault();
+          const newInvoice = {
+            id: invoices.length ? invoices[invoices.length-1].id + 1 : 1024,
+            clientId: parseInt(invoiceForm.invoiceClient.value),
+            amount: parseFloat(invoiceForm.invoiceAmount.value),
+            dueDate: invoiceForm.invoiceDueDate.value,
+            status: invoiceForm.invoiceStatus.value
+          };
+          invoices.push(newInvoice);
+          renderInvoices();
+          closeModal();
+        });
+      });
+
+      // Delegate edit and delete buttons on invoices table
+      invoicesTableBody.addEventListener('click', e => {
+        if(e.target.classList.contains('edit-invoice-btn')) {
+          const invoiceId = parseInt(e.target.getAttribute('data-id'));
+          const invoice = invoices.find(i => i.id === invoiceId);
+          if(invoice) {
+            let clientOptions = clients.map(c => `<option value="${c.id}" ${c.id === invoice.clientId ? 'selected' : ''}>${c.name}</option>`).join('');
+            openModal('Edit Invoice', `
+              <form id="invoiceEditForm">
+                <div class="form-group">
+                  <label for="editInvoiceClient">Client</label>
+                  <select id="editInvoiceClient" name="editInvoiceClient" required>
+                    ${clientOptions}
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="editInvoiceAmount">Amount ($)</label>
+                  <input type="number" step="0.01" min="0" id="editInvoiceAmount" name="editInvoiceAmount" value="${invoice.amount}" required />
+                </div>
+                <div class="form-group">
+                  <label for="editInvoiceDueDate">Due Date</label>
+                  <input type="date" id="editInvoiceDueDate" name="editInvoiceDueDate" value="${invoice.dueDate}" required />
+                </div>
+                <div class="form-group">
+                  <label for="editInvoiceStatus">Status</label>
+                  <select id="editInvoiceStatus" name="editInvoiceStatus" required>
+                    <option value="Pending" ${invoice.status === 'Pending' ? 'selected' : ''}>Pending</option>
+                    <option value="Paid" ${invoice.status === 'Paid' ? 'selected' : ''}>Paid</option>
+                    <option value="Overdue" ${invoice.status === 'Overdue' ? 'selected' : ''}>Overdue</option>
+                  </select>
+                </div>
+                <button type="submit">Update Invoice</button>
+              </form>
+            `);
+            const invoiceEditForm = document.getElementById('invoiceEditForm');
+            invoiceEditForm.addEventListener('submit', evt => {
+              evt.preventDefault();
+              invoice.clientId = parseInt(invoiceEditForm.editInvoiceClient.value);
+              invoice.amount = parseFloat(invoiceEditForm.editInvoiceAmount.value);
+              invoice.dueDate = invoiceEditForm.editInvoiceDueDate.value;
+              invoice.status = invoiceEditForm.editInvoiceStatus.value;
+              renderInvoices();
+              closeModal();
+            });
+          }
+        } else if(e.target.classList.contains('delete-invoice-btn')) {
+          const invoiceId = parseInt(e.target.getAttribute('data-id'));
+          const invoiceIndex = invoices.findIndex(i => i.id === invoiceId);
+          if(invoiceIndex !== -1) {
+            if(confirm(`Are you sure you want to delete invoice #${invoices[invoiceIndex].id}?`)) {
+              invoices.splice(invoiceIndex, 1);
+              renderInvoices();
+            }
+          }
+        }
+      });
+
+    })();
+  </script>
+</body>
+</html>
